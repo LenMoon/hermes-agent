@@ -53,10 +53,13 @@ def check_runtime(project_root: Path) -> str | None:
     import pm
     from hermes_cli.steward import read_install_stamp, sealed_steward
 
-    if (Path(project_root) / ".git").exists() and read_install_stamp(project_root).get("updateMechanism") != "self":
-        return None  # A developer's checkout does not owe managed products.
-
     problems = pm.activate()
+    if (Path(project_root) / ".git").exists() and read_install_stamp(project_root).get("updateMechanism") != "self":
+        # A developer's checkout does not owe managed products, so no warning.
+        # The activation above still runs: a checkout install.ps1 made on a
+        # machine with no git has git only in the pm store, and every later
+        # bare `git` (hermes update, plugins, status) resolves it via PATH.
+        return None
     if not problems:
         return None
     steward = sealed_steward(Path(project_root))

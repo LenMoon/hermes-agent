@@ -78,10 +78,14 @@ def test_sealed_stamp_reader_honors_external_install_root(tmp_path, monkeypatch)
     assert venv_sync._is_sealed(stamped) is True
 
 
-def test_developer_checkout_skips_managed_runtime_warning(tmp_path, monkeypatch):
+def test_unstamped_checkout_gets_store_tools_on_path_without_a_warning(tmp_path, monkeypatch):
     import pm
 
     checkout = tmp_path / "checkout"
     (checkout / ".git").mkdir(parents=True)
-    monkeypatch.setattr(pm, "activate", lambda: pytest.fail("dev checkout activated managed runtime"))
+    activated = []
+    # A fresh Windows script install: git lives only in the pm store, the
+    # checkout has no stamp yet, and the store verdict must stay silent.
+    monkeypatch.setattr(pm, "activate", lambda: activated.append(True) or ["venv: stale"])
     assert venv_sync.check_runtime(checkout) is None
+    assert activated == [True]
